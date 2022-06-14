@@ -1,5 +1,5 @@
 <div class="footer">
     <div class="copyright">
-        <p>Copyright &copy; Designed & Developed by BelivIT>beliveIT</a>{{date('Y')}} </p>
+        <p>Copyright &copy {{date('Y')}} Exposure Ltd, Designed & Developed by beliveIT</p>
     </div>
 </div>
