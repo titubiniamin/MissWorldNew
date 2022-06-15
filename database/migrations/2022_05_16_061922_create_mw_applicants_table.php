@@ -59,8 +59,8 @@ class CreateMwApplicantsTable extends Migration
             $table->integer('disqualified_round')->nullable();
             $table->date('disqualified_time')->nullable();
             $table->string('disqualified_reason')->nullable();
-            $table->integer('mail_status')->nullable();
-            $table->integer('f_current_steps')->nullable();
+            $table->integer('mail_status')->nullable()->comment('Registration Submit button disable on =1 0=>Editable;1=>final');
+            $table->integer('f_current_steps')->default(1);
             $table->integer('is_we_done')->nullable();
             $table->integer('reject_step')->nullable();
             $table->integer('result_status')->nullable();

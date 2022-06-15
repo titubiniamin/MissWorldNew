@@ -149,7 +149,7 @@
                 <li class="icons dropdown">
                     <div class="user-img c-pointer position-relative"   data-toggle="dropdown">
                         <span class="activity active"></span>
-                        <img src="{{asset('images/blank.png')}}" height="40" width="40" alt="">
+                        <img src="{{$mwApplicantImageVidoes && $mwApplicantImageVidoes->close_up_photo? asset('storage/applicant_image/'.$mwApplicantImageVidoes->close_up_photo):asset('images/blank.png')}}" height="40" width="40" alt="">
                         <form id="logout" action="{{route('user.logout')}}" method="POST">
                             @csrf
                             <a onclick="document.getElementById('logout').submit()" role="button"><span>Logout</span></a>

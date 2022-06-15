@@ -39,19 +39,20 @@
             </div>
 
             <div class="card">
-                <h3 class="text-center mb-1 mt-3">Admin Login</h3>
+                <h4 class="text-center mb-1 mt-3">Admin Authentication Request</h4>
                 <div class="card-body">
 
-                    <form class="col-md-12 p-t-10" role="form" method="POST" action="{{ route('admin.login') }}">
+                    <form class="col-md-12 p-t-10" role="form" method="POST" action="{{ route('post.admin.auth.request') }}">
                         @csrf
                         {{--                        <input type="hidden" name="_token" value="dO3qgOU7ZqiXqTAbp6Q4DGcHS3CeZpvhrQxklnt1">--}}
                         <div class="form-group">
+
                             <label class="control-label" for="email">Email</label>
 
                             <div>
                                 {{--                                <input type="text" class="form-control" name="email" value="" id="email">--}}
 
-                                <input type="email" name="email" id="email" value="{{ old('email') }}"
+                                <input type="email" readonly name="email" id="email" value="{{ $adminEmail??'' }}"
                                        class="form-control @error('email') is-invalid @enderror" required
                                        autocomplete="email" autofocus placeholder="Email">
                                 @error('email')
@@ -64,12 +65,12 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="control-label" for="password">Password</label>
+                            <label class="control-label" for="password">Comment</label>
 
                             <div>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                       placeholder="Password" name="password" required autocomplete="current-password">
-                                @error('password')
+                                <input type="text" class="form-control @error('comment') is-invalid @enderror"
+                                       placeholder="Comment" name="comment" required >
+                                @error('comment')
                                 <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
                                     </span>
@@ -81,12 +82,12 @@
                         <div class="form-group">
                             <div>
                                 <div class="checkbox">
-                                    <input class="form-check-input" type="checkbox" name="remember"
-                                           id="remember" {{ old('remember') ? 'checked' : '' }}>
+{{--                                    <input class="form-check-input" type="checkbox" name="remember"--}}
+{{--                                           id="remember" {{ old('remember') ? 'checked' : '' }}>--}}
 
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
+{{--                                    <label class="form-check-label" for="remember">--}}
+{{--                                        {{ __('Remember Me') }}--}}
+{{--                                    </label>--}}
 
                                 </div>
                             </div>
@@ -95,14 +96,22 @@
                         <div class="form-group">
                             <div>
                                 <button type="submit" class="btn btn-block btn-primary">
-                                    Login
+                                    Send Request
                                 </button>
                                 @if(session('error'))
-                                    <div class="text-danger">
+                                    <div class="text-danger" style="font-size: 16px; font-weight: 800;text-align: center;font-style: italic">
                                         {{session()->get('error')}}
                                     </div>
                                 @endif
+                                @if(session('success'))
+                                    <div class="text-success" style="font-size: 16px; font-weight: 800;text-align: center;font-style: italic">
+                                        {{session()->get('success')}}
+                                    </div>
+                                @endif
                             </div>
+                        </div>
+                        <div class="text-center">
+                            <a class="btn btn-link" href="{{ route('admin.login') }}">{{ __('Login') }}</a>
                         </div>
                         <input type="hidden" id="FINGER_PRINT" name="finger_print"/>
 

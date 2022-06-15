@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\MwStep;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,7 +18,7 @@ class DatabaseSeeder extends Seeder
 //        foreach($seeds as $seed){
 //            $this->call($seed);
 //        }
-        $this->call(UpazillaSeeder::class);
+        $this->call([MwStepSeeder::class]);
         // \App\Models\User::factory(10)->create();
     }
 }

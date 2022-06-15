@@ -39,13 +39,13 @@
     <!--**********************************
            Nav header start
        ***********************************-->
-    <div class="nav-header">
+    <div class="nav-header" style="background-color: #171718">
         <div class="brand-logo">
             <a href="index.html">
                 <b class="logo-abbr"><img src="{{asset('admin_assets/images/logo.png')}}" alt=""> </b>
                 <span class="logo-compact"><img src="{{asset('admin_assets/images/logo-compact.png')}}" alt=""></span>
                 <span class="brand-title">
-                        <img src="{{asset('admin_assets/images/logo-text.png')}}" alt="">
+                        <img style=" width: 97%;height: 75%;margin:-12%" src="{{asset('admin_assets/images/logo-text.png')}}" alt="">
                     </span>
             </a>
         </div>

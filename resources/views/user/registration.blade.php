@@ -7,10 +7,16 @@
         .left {
             float: left;
         }
+
+        span[dir="select2-data-4-yy2t"] {
+            width: -webkit-fill-available;
+            background-color: red;
+        }
     </style>
 
-    <div class="card">
+    <div class="card ">
         <div class="card-body">
+            <h3 class="card-title text-success " style="font-weight:bolder">Pageant Registration</h3>
             <form action="{{ route('applicant.register') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row">
@@ -334,7 +340,8 @@
                     <div class="form-group col-md-6">
                         <label for="address" class="col-form-label">{{ __('Address') }}<span
                                 class="text-danger">*</span></label>
-                        <textarea rows="3" id="address" rows="1"  class="form-control @error('address') is-invalid @enderror"
+                        <textarea rows="3" id="address" rows="1"
+                                  class="form-control @error('address') is-invalid @enderror"
                                   name="address"
                                   autocomplete="address"
                                   placeholder="">{{ $mwApplicant ? $mwApplicantAddress->address ?? '' :  old('address') }}</textarea>
@@ -397,8 +404,8 @@
                         </select>
                         @error('last_name')
                         <span class="invalid-feedback" role="alert">
-                                              <strong>{{ $message }}</strong>
-                                          </span>
+                        <strong>{{ $message }}</strong>
+                        </span>
                         @enderror
 
                     </div>
@@ -558,36 +565,78 @@
                     </div>
                     <!----------Row End---------->
                 </div>
+                <div class="form-element-html">
+                    <div>
+                        <div class="oneLineText-cover field-cover">
+                            <div class="form-check"><span class="error"></span>
+                                <input type="checkbox" class="form-check-input" id="confirm" required="" name="confirm"
+                                       style="border-radius:0px"> I agree to the <a href="#">Terms &amp; Condition</a>.
+                                I hereby affirm that, the information provided above are authentic and that I have the
+                                full consent of my legal guardian(s)
+                                to participate in this pageant and that I am submitting this form under no juries and of
+                                my free will.
+                                <p style="color:red">
+                                    After final submission you will be eligible for Miss World Bangladesh 2022. You can
+                                    save a draft of the form before submission. After completing all the required
+                                    fields, press the <strong>Final Submit</strong> button.
 
-                <div class="form-group">
-                    <div class="d-flex mt-4">
-                        <button id="submit-btn" data-toggle="modal" data-target="#exampleModal"
-                                type="submit" class="w-100 btn btn-success px-2">
-                            {{ __('Register') }}
+                                </p>
+                                <p style="color:red; font-size:18px;">Note: After pressing the Final Submit button, you
+                                    can no longer make changes to your profile. </p>
+                                <i class="no-icon"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <!----------Button------------------>
+   <!--For Draft and Final submission Button value is assigned as default mail_status=0 so assigned final button as mail_status=1----->
+             @if(empty($mwApplicant) || $mwApplicant->mail_status != 1)
+                <div class="row">
+                    <div class="form-group">
+                        <div class="d-flex mt-4 col-md-3">
+                            <button id="submit-btn" value="1" data-toggle="modal"
+                                    type="submit" name="mail_status" class="w-100 btn btn-danger px-2">
+                                {{ __('Final') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex mt-4 col-md-3 float-md-end">
+                        <button id="submit-btn" data-toggle="modal"
+                                type="submit" value="0" class="w-100 btn btn-success px-2">
+                            {{ __('Draft') }}
                         </button>
                     </div>
                 </div>
+                @else
+                 <div class="text-success"><h3>You have final submitted the form</h3></div>
+                @endif
+        <!----------Button------------------>
 
-            </form>
+
+        </form>
 
 
-            <!-- Modal -->
-            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                 aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered d-flex justify-content-center">
-                    <img src="{{ asset('images/spinner.gif') }}">
-                </div>
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered d-flex justify-content-center">
+                <img src="{{ asset('images/spinner.gif') }}">
             </div>
         </div>
     </div>
 
 
+
     <script type="text/javascript">
+        $('input[type="checkbox"]').on('change', function (e) {
+            if (e.target.checked) {
+                $('#submit-btn').attr('data-target', '#exampleModal');
+            } else $('#submit-btn').removeAttr('data-target')
+        });
         $('.js-example-basic-multiple').select2();
 
-        // $('select').selectpicker()
+
         mid_shot_photo.onchange = () => {
-            console.log(mid_shot_photo_preview.src)
             const [file] = mid_shot_photo.files
             if (file) {
                 mid_shot_photo_preview.src = URL.createObjectURL(file)
@@ -595,7 +644,6 @@
         }
 
         close_up_photo.onchange = () => {
-
             const [file] = close_up_photo.files
             if (file) {
                 close_up_photo_preview.src = URL.createObjectURL(file)
@@ -603,11 +651,9 @@
         }
 
         full_length_photo.onchange = () => {
-            console.log(full_length_photo_preview.src)
             const [file] = full_length_photo.files
             if (file) {
                 full_length_photo_preview.src = URL.createObjectURL(file)
-                // console.log(full_length_photo_preview.src)
             }
         }
 
@@ -615,15 +661,13 @@
             const [file] = video.files
             if (file) {
                 video_preview_main.src = URL.createObjectURL(file)
-                console.log(video_preview_main.src)
-                console.log(document.querySelector("video").src)
             }
         }
 
 
         function getDistricts(value_division_id) {
             let districtDiv = $('#district_id');
-            console.log(3);
+            // console.log(3);
             let upazillaDiv = $('#upazilla_id')
             upazillaDiv.html('');
             let currentDistrict = "{{$mwApplicantAddress ? $mwApplicantAddress->district_id ?? $mwApplicantAddress->district_id :null}}";
@@ -636,7 +680,7 @@
                     // console.log(data);
                     let selectOption = [];
                     data.forEach(function (district) {
-                        console.log(district);
+                        // console.log(district);
                         if (currentDistrict == district.id) {
                             selected = "selected"
                         }
@@ -649,7 +693,7 @@
                 },
                 error: function (ts) {
                     alert(ts.responseText)
-                } // or console.log(ts.responseText)
+                }
             })
         }
 
@@ -675,7 +719,7 @@
                         selectOption.push(`<option ${selected} value="${upazilla.id}">${upazilla.name}</option>`);
                         selected = "";
                     })
-                    console.log(selectOption);
+                    // console.log(selectOption);
                     upazillaDiv.html('');
                     upazillaDiv.html(selectOption);
                     // console.log(upazilla);

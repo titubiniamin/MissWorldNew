@@ -6,7 +6,7 @@
         <ul class="metismenu" id="menu">
             <li class="nav-label">Dashboard</li>
             <li>
-                <div class="col-sm-12">
+                <div class="col-sm-12 text-justify">
 
                     <div style="font-size: 12px" class="inner-content widgets-container">
                         <div id="text-2" class="widget widget_text" style="font-family:Times-New-Roman">			<div class="textwidget"><p><strong>Eligibility Criteria:</strong></p>

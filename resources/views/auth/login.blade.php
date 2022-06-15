@@ -21,7 +21,7 @@
 <div id="preloader">
     <div class="loader">
         <svg class="circular" viewBox="25 25 50 50">
-            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="3" stroke-miterlimit="10" />
+            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="3" stroke-miterlimit="10"/>
         </svg>
     </div>
 </div>
@@ -30,12 +30,16 @@
 ********************-->
 
 
-
 <div class="container" style="margin-top:5%">
     <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-4">
-            <h3 class="text-center mb-4">Login</h3>
+            <div class="fadeIn first" style="background:#000;">
+                <img src="{{asset('admin_assets/images/logo-text.png')}}" id="icon" alt="User Icon" style="width: 82%;"
+                     height="80px">
+            </div>
+
             <div class="card">
+                <h3 class="text-center mb-1 mt-3">Login</h3>
                 <div class="card-body">
                     <form class="col-md-12 p-t-10" role="form" method="POST" action="{{ route('login') }}">
                         @csrf
@@ -46,7 +50,9 @@
 
                             <div>
                                 {{--                                <input type="text" class="form-control" name="email" value="" id="email">--}}
-                                <input type="email" name="email" id="email" value="{{ old('email') }}" class="form-control @error('email') is-invalid @enderror"  required autocomplete="email" autofocus placeholder="Email">
+                                <input type="email" name="email" id="email" value="{{ old('email') }}"
+                                       class="form-control @error('email') is-invalid @enderror" required
+                                       autocomplete="email" autofocus placeholder="Email">
                                 @error('email')
                                 <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -60,7 +66,8 @@
                             <label class="control-label" for="password">Password</label>
 
                             <div>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" placeholder="Password" name="password" required autocomplete="current-password">
+                                <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                       placeholder="Password" name="password" required autocomplete="current-password">
                                 @error('password')
                                 <span class="invalid-feedback" role="alert">
                                         <strong>{{ $message }}</strong>
@@ -73,7 +80,8 @@
                         <div class="form-group">
                             <div>
                                 <div class="checkbox">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="remember"
+                                           id="remember" {{ old('remember') ? 'checked' : '' }}>
 
                                     <label class="form-check-label" for="remember">
                                         {{ __('Remember Me') }}
@@ -94,6 +102,13 @@
                                     </div>
                                 @endif
                             </div>
+                        </div>
+                        {{-- Login with Facebook --}}
+                        <div class="flex items-center justify-end mt-4">
+                            <a class="btn" href="{{ url('auth/facebook') }}"
+                               style="background: #3B5499; color: #ffffff; padding: 10px; width: 100%; text-align: center; display: block; border-radius:3px;">
+                                Login with Facebook
+                            </a>
                         </div>
                     </form>
                 </div>
