@@ -3,7 +3,7 @@
     @push('title')
         Dashboard
     @endpush
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-12 table-responsive">
                 <table class="table table-bordered user_datatable">
@@ -17,6 +17,9 @@
                         <th>Email</th>
                         <th>Date of Birth</th>
                         <th>Social link</th>
+                        <th>Height</th>
+                        <th>Weight</th>
+                        <th>Video</th>
                         <th width="100px">Action</th>
                     </tr>
                     </thead>
@@ -60,7 +63,16 @@
                         return data+"<br>Age: "+ ~~((Date.now() - birthday) / (31557600000));
                     }
                     },
-                    {data: 'social_link', name: 'email'},
+                    {data: 'social_link', name: 'social link'},
+                    {data: 'height', name: 'height'},
+                    {data: 'weight', name: 'weight'},
+                    {data: 'user.image_video.video', name: 'video',
+                    render:function(data){
+                        return `<video controls   width="200" height="140" poster=""  id="video_preview_main">
+                         <source id="video_preview"  src="{{asset('storage/applicant_video/${data}')}}" type="video/mp4">
+                                </video>`;
+                    }
+                    },
                     // {data: 'user.address.upazilla.district.division.name', name: 'name'},
                     // {data: 'email', name: 'email'},
                     {
