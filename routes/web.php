@@ -51,5 +51,16 @@ Auth::routes();
     });
 });
 
+Route::get('test',function(){
+ ?>
+<script>
+    let d=new Date()
+    d.getFullYear()
+    console.log(Date(1655371839477))
+</script>
+    <?php
+
+});
+
 //Route::view('admin/login','admin.login')->name('admin.login');
 //Route::post('admin/login',[AdminController::class,'login'])->name('admin.auth');

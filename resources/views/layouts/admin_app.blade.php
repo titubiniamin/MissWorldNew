@@ -8,15 +8,22 @@
     <title>
         @stack('title')
     </title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-
+    <script src="{{asset('admin_assets/plugins/common/common.min.js')}}"></script>
+    <link rel="stylesheet" href="{{asset('admin_assets/css/all.min.css')}}"/>
     <link href="{{asset('admin_assets/css/style.css')}}" rel="stylesheet">
-{{--    <link href="{{asset('css/app.css')}}" rel="stylesheet">--}}
+{{--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css"/>--}}
+    <link href="{{asset('admin_assets/css/jquery.dataTables.min.css')}}" rel="stylesheet">
+    <link href="{{asset('admin_assets/css/dataTables.bootstrap4.min.css')}}" rel="stylesheet">
+{{--    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>--}}
+    <script src="{{asset('admin_assets/js/jquery.validate.js')}}"></script>
+    <script src="{{asset('admin_assets/js/jquery.dataTables.min.js')}}"></script>
+    <script src="{{asset('admin_assets/js/bootstrap.4.1.3.min.js')}}"></script>
+    <script src="{{asset('admin_assets/js/dataTables.bootstrap4.min.js')}}"></script>
+
+
+    {{--    <link href="{{asset('css/app.css')}}" rel="stylesheet">--}}
 
 </head>
-
 <body>
 
 <!--*******************
@@ -25,7 +32,7 @@
 <div id="preloader">
     <div class="loader">
         <svg class="circular" viewBox="25 25 50 50">
-            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="3" stroke-miterlimit="10" />
+            <circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="3" stroke-miterlimit="10"/>
         </svg>
     </div>
 </div>
@@ -45,7 +52,8 @@
                 <b class="logo-abbr"><img src="{{asset('admin_assets/images/logo.png')}}" alt=""> </b>
                 <span class="logo-compact"><img src="{{asset('admin_assets/images/logo-compact.png')}}" alt=""></span>
                 <span class="brand-title">
-                        <img style=" width: 97%;height: 75%;margin:-12%" src="{{asset('admin_assets/images/logo-text.png')}}" alt="">
+                        <img style=" width: 97%;height: 75%;margin:-12%"
+                             src="{{asset('admin_assets/images/logo-text.png')}}" alt="">
                     </span>
             </a>
         </div>
@@ -57,7 +65,7 @@
     @include('layouts.admin_sidebar')
     <div class="content-body">
         <div class="container-fluid">
-        @yield('main-content')
+            @yield('main-content')
         </div>
     </div>
     <!--**********************************
@@ -71,13 +79,11 @@
 ***********************************-->
 
 
-
-
 <!--**********************************
     Scripts
 ***********************************-->
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-<script src="{{asset('admin_assets/plugins/common/common.min.js')}}"></script>
+
+
 <script src="{{asset('admin_assets/js/custom.min.js')}}"></script>
 <script src="{{asset('admin_assets/js/settings.js')}}"></script>
 <script src="{{asset('admin_assets/js/gleek.js')}}"></script>
@@ -100,5 +106,7 @@
 <script src="{{asset('admin_assets/plugins/chartist/js/chartist.min.js')}}"></script>
 <script src="{{asset('admin_assets/plugins/chartist-plugin-tooltips/js/chartist-plugin-tooltip.min.js')}}"></script>
 <script src="{{asset('admin_assets/js/dashboard/dashboard-1.js')}}"></script>
+
+
 </body>
 </html>

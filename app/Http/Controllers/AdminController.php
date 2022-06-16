@@ -7,9 +7,11 @@ use App\Models\District;
 use App\Models\MwApplicant;
 use App\Models\MwFingerprint;
 use App\Models\MwStep;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
+use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
@@ -54,16 +56,50 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
+//        $data = MwApplicant::query()->with(['user' => function ($query) {
+//            $query->with(['address.upazilla.district.division','imageVideo']);
+//        }])->get();
+//        return $data;
+        //////////////////////////
+        if ($request->ajax()) {
+            $data = MwApplicant::query()->with(['user' => function ($query) {
+                $query->with(['address.upazilla.district.division','image_video']);
+            }])->get();
+//        dd($data);
+            return Datatables::of($data)
+                ->addColumn('action', function($row){
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+//        return view('users');
+        return view('admin.dashboard');
+        /// //////////////////////////
+        ///
+//        $data2=MwApplicant::query()->select('*')
+//            ->leftJoin('mw_applicant_addresses','mw_applicant_addresses.user_id','=','mw_applicants.id')
+//            ->leftJoin('districts','districts.id','=','mw_applicant_addresses.district_id')->get();
+//        dd($data2);
+        $data = MwApplicant::query()->with(['user' => function ($query) {
+            $query->with(['address.upazilla.district.division','imageVideo']);
+        }])->get()->toArray();
+dd($data);
+//dd($data[0]->user->address->address);
+        dd($data);
+
         $value = $request->session()->get('key');
         if ($value) {
             $steps = MwStep::all()->sortBy('step_num');
             $currentStep = MwStep::query()->where('is_current', '=', 1)->first()->id;
             $districts = District::query()->orderBy('name', 'asc')->get();
-            $mwApplicats=MwApplicant::all()->where('f_current_steps',$currentStep);
-            dd($mwApplicats);
+            $mwApplicats = MwApplicant::all()->where('f_current_steps', $currentStep);
+//            dd($mwApplicats);
 //            $currentStep=MwStep::query()->where('is_current','=',1)->first()//not working;
 //            $current_step = MwStep::where('is_current','=',1)->first()->id;
-            dd($currentStep);
+//            dd($currentStep);
             return view('admin.dashboard');
         } else return view('admin.login');
 
