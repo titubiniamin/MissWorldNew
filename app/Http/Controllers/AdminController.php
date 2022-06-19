@@ -61,22 +61,31 @@ class AdminController extends Controller
 //        }])->get();
 //        return $data;
         //////////////////////////
+        ///
+        $search = $request->search['value'] ?? null;
+        $steps=MwStep::all();
+        $districts=District::all();
         if ($request->ajax()) {
-            $data = MwApplicant::query()->with(['user' => function ($query) {
+            $data = MwApplicant::query()
+                ->with(['user' => function ($query) {
                 $query->with(['address.upazilla.district.division','image_video']);
             }])->get();
 //        dd($data);
             return Datatables::of($data)
+                ->addColumn('full_name', function($row){
+                    return $row->first_name." ".$row->last_name;
+                })
                 ->addColumn('action', function($row){
                     $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
                     return $btn;
                 })
                 ->rawColumns(['action'])
+
                 ->make(true);
         }
 
 //        return view('users');
-        return view('admin.dashboard');
+        return view('admin.dashboard',['steps'=>$steps,'districts'=>$districts]);
         /// //////////////////////////
         ///
 //        $data2=MwApplicant::query()->select('*')
@@ -86,7 +95,7 @@ class AdminController extends Controller
         $data = MwApplicant::query()->with(['user' => function ($query) {
             $query->with(['address.upazilla.district.division','imageVideo']);
         }])->get()->toArray();
-dd($data);
+        dd($data);
 //dd($data[0]->user->address->address);
         dd($data);
 

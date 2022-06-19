@@ -45,22 +45,16 @@ Auth::routes();
         });
     Route::group(['middleware' => 'admin.auth'], function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+//        Route::get('/dashboard2', [AdminController::class, 'dashboard2'])->name('admin.dashboard2');
         Route::get('/logout', [AdminController::class, 'logout'])->name('admin.logout');
         Route::view('/auction', 'admin.auction')->name('auction.entry');
         Route::post('/auction/store', [AdminController::class, 'auctionStore'])->name('auction.store');
     });
 });
+Route::get('admin/getData', [AdminController::class, 'getData'])->name('admin.getData');
+Route::get('admin/dashboard2view', [AdminController::class, 'dashboard2view'])->name('admin.dashboard2view');
 
-Route::get('test',function(){
- ?>
-<script>
-    let d=new Date()
-    d.getFullYear()
-    console.log(Date(1655371839477))
-</script>
-    <?php
-
-});
+Route::view('test','admin.test');
 
 //Route::view('admin/login','admin.login')->name('admin.login');
 //Route::post('admin/login',[AdminController::class,'login'])->name('admin.auth');

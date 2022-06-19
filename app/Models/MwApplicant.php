@@ -10,8 +10,6 @@ class MwApplicant extends Model
 //    protected $primaryKey = 'Applicant_Id';
     public $timestamps = true;
     protected $guarded = ['id'];
-    protected $appends = ['full_name'];
-
 
 
 
@@ -20,10 +18,7 @@ class MwApplicant extends Model
         'country_visited'=>'array'
     ];
 
-    public function getFullNameAttribute()
-    {
-        return "${this['first_name']} ${this['last_name']}";
-    }
+
 
     public function user()
     {
