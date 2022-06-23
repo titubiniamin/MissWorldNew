@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SocialController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,7 +55,17 @@ Auth::routes();
 Route::get('admin/getData', [AdminController::class, 'getData'])->name('admin.getData');
 Route::get('admin/dashboard2view', [AdminController::class, 'dashboard2view'])->name('admin.dashboard2view');
 
-Route::view('test','admin.test');
+Route::get('test',function (Request $request){
+    $limit = $request->limit ?? 10;
+    $user = \App\Models\User::query()->paginate($limit);
+    return view('test',compact('user'));
+})->name('test');
+
+Route::get('test2',function(Request $request){
+    $limit = $request->limit ?? 10;
+    $user=\App\Models\User::query()->paginate($limit);
+    return view('admin.test2',compact('user'));
+})->name('test2');
 
 //Route::view('admin/login','admin.login')->name('admin.login');
 //Route::post('admin/login',[AdminController::class,'login'])->name('admin.auth');

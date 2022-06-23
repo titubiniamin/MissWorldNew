@@ -18,7 +18,7 @@ class MwStepSeeder extends Seeder
     {
        $data=
            [
-             ['step_num'=>1,'step_name'=>'Applicant Round','step_status'=>1,'is_current'=>0,'is_for_vote'=>0],
+             ['step_num'=>1,'step_name'=>'Applicant Round','step_status'=>1,'is_current'=>1,'is_for_vote'=>0],
              ['step_num'=>2,'step_name'=>'Audition Round','step_status'=>1,'is_current'=>0,'is_for_vote'=>0],
              ['step_num'=>3,'step_name'=>'Head to Head Round','step_status'=>1,'is_current'=>0,'is_for_vote'=>0],
              ['step_num'=>4,'step_name'=>'Top Model Round','step_status'=>1,'is_current'=>0,'is_for_vote'=>0],

@@ -11,4 +11,7 @@ class District extends Model
     {
         return $this->belongsTo(Division::class);
     }
+    public function upazilla(){
+        return $this->hasMany(Upazilla::class);
+    }
 }

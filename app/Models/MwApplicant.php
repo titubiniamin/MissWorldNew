@@ -25,5 +25,15 @@ class MwApplicant extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function address()
+    {
+        return $this->hasOne(MwApplicantAddress::class,'user_id','user_id');
+    }
+
+    public function imageVideo()
+    {
+        return $this->hasOne(MwApplicantImageVideo::class,'user_id','user_id');
+    }
+
 
 }

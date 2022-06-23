@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class MwApplicantAddress extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['user_id','division_id','district_id','upazilla_id','address'];
 
     public function division()

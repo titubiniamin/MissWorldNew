@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use App\Models\District;
+use App\Models\Division;
 use App\Models\MwApplicant;
+use App\Models\MwApplicantAddress;
 use App\Models\MwFingerprint;
 use App\Models\MwStep;
+use App\Models\Upazilla;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -56,6 +60,23 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
+        $limit = $request->limit ?? 10;
+//        $data = MwApplicant::query()->with(['user' => function ($query) {
+//            $query->with(['address.upazilla.district.division']);
+//        }])->get();
+//        return $data;
+        $steps = MwStep::all();
+        $currentStep = $steps->where('is_current', 1)->first()->id;
+        $applicants =MwApplicant::with('address.upazilla.district.division','imageVideo')
+                            ->where('f_current_steps', $currentStep)
+                            ->orderBy('id')
+                            ->paginate($limit);
+//        dd($applicants);
+        return view('admin.participant_list', compact('applicants'));
+    }
+
+    public function dashboard_bk(Request $request)
+    {
 //        $data = MwApplicant::query()->with(['user' => function ($query) {
 //            $query->with(['address.upazilla.district.division','imageVideo']);
 //        }])->get();
@@ -63,29 +84,28 @@ class AdminController extends Controller
         //////////////////////////
         ///
         $search = $request->search['value'] ?? null;
-        $steps=MwStep::all();
-        $districts=District::all();
+        $steps = MwStep::all();
+        $districts = District::all();
         if ($request->ajax()) {
             $data = MwApplicant::query()
                 ->with(['user' => function ($query) {
-                $query->with(['address.upazilla.district.division','image_video']);
-            }])->get();
-//        dd($data);
+                    $query->with(['address.upazilla.district.division', 'image_video']);
+                }])->get();
+//$data=compact('steps','data');
             return Datatables::of($data)
-                ->addColumn('full_name', function($row){
-                    return $row->first_name." ".$row->last_name;
+                ->addColumn('full_name', function ($row) {
+                    return $row->first_name . " " . $row->last_name;
                 })
-                ->addColumn('action', function($row){
+                ->addColumn('action', function ($row) {
                     $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
                     return $btn;
                 })
                 ->rawColumns(['action'])
-
                 ->make(true);
         }
 
 //        return view('users');
-        return view('admin.dashboard',['steps'=>$steps,'districts'=>$districts]);
+        return view('admin.dashboard', ['steps' => $steps, 'districts' => $districts]);
         /// //////////////////////////
         ///
 //        $data2=MwApplicant::query()->select('*')
@@ -93,7 +113,7 @@ class AdminController extends Controller
 //            ->leftJoin('districts','districts.id','=','mw_applicant_addresses.district_id')->get();
 //        dd($data2);
         $data = MwApplicant::query()->with(['user' => function ($query) {
-            $query->with(['address.upazilla.district.division','imageVideo']);
+            $query->with(['address.upazilla.district.division', 'imageVideo']);
         }])->get()->toArray();
         dd($data);
 //dd($data[0]->user->address->address);
@@ -112,6 +132,30 @@ class AdminController extends Controller
             return view('admin.dashboard');
         } else return view('admin.login');
 
+    }
+
+    public function test()
+    {
+        $division=Division::with('districts.upazilla')->get();
+        dd($division->districts->random()->id);
+        $upazilla=Upazilla::with('district.division')->get()->random();
+        dd($upazilla->district->division->id);
+        $user=User::factory(1)->create();
+        dd($user[0]->id);
+        return Schema::getColumnListing('mw_applicants');
+//      $upazilla =  Upazilla::with('district.division')->get()->random();
+        $division = Division::with('districts.upazilla')->get()->random();
+        dd($division->districts->random()->upazilla->random());
+//        $division=Division::all();
+//        $data = Upazilla::with('district')->get();
+//        print_r($data);
+//        $district=District::with(['division'=>function($query) use ($division){
+//            dd($division);
+//        }]);
+//        dd($district);
+//        $a=Upazilla::with(['district' =>  function($query) {
+//            $query->orderByRaw('RAND()')->take(1);}])->get();
+//        return $a;
     }
 
     public function logout()
