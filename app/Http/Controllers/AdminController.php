@@ -60,19 +60,91 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        $limit = $request->limit ?? 10;
+//        if ($request->ajax()) {
+//            $data = User::select('id','name','email')->get();
+//            return Datatables::of($data)->addIndexColumn()
+//                ->addColumn('action', function($row){
+//                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+//                    return $btn;
+//                })
+//                ->rawColumns(['action'])
+//                ->make(true);
+//        }
+//        $step=MwStep::where('id',1)->get()->first();
+//        return $step->step_name;
+//
+//        return view('admin.participant_list');
 //        $data = MwApplicant::query()->with(['user' => function ($query) {
 //            $query->with(['address.upazilla.district.division']);
 //        }])->get();
-//        return $data;
-        $steps = MwStep::all();
-        $currentStep = $steps->where('is_current', 1)->first()->id;
-        $applicants =MwApplicant::with('address.upazilla.district.division','imageVideo')
-                            ->where('f_current_steps', $currentStep)
-                            ->orderBy('id')
-                            ->paginate($limit);
+//        $steps = MwStep::all();
+//        $currentStep = $steps->where('is_current', 1)->first()->id;
+//        $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo')
+//            ->where('f_current_steps', $currentStep)
+//            ->get();
+//            dd($applicants);
+        $data = ['test' => 'test'];
+        if ($request->ajax()) {
+//            $data = MwApplicant::query()->with(['user' => function ($query) {
+//                $query->with(['address.upazilla.district.division']);
+//            }])->get();
+//            $steps = MwStep::all();
+            $currentStep = MwStep::where('is_current', 1)->first()->id;
+            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo')
+                ->where('f_current_steps', $currentStep)
+                ->get();
+//            dd($applicants);
+            return Datatables::of($applicants)->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->addColumn('name', function ($row) {
+                    return $row->first_name . " " . $row->last_name;
+                })
+                ->addColumn('step', function ($row) {
+                    $step = MwStep::where('id', $row->f_current_steps)->get()->first();
+
+                    return $step->step_name;
+//                    $step=MwStep::where('id',$row->f_current_steps)->get();
+//                    return $step->name;
+                })
+                ->addColumn('step_change', function ($row) {
+                    $steps = MwStep::all();
+                    $options = "";
+                    foreach ($steps as $step) {
+                        if ($step->id >= $row->f_current_steps && $step->id < ($row->f_current_steps + 2)) {
+                            $options .= '<option value="' . $step->id . '"' . ($step->id == $row->f_current_steps ? "selected" : "") . ' >' . $step->step_name . '</option>';
+                        }
+                    }
+                    return
+                        '<select class="form-control">
+                        <option disabled selected>Change/Jump Next Round</option>
+                        ' . $options . '</select>';
+
+
+                })
+                ->rawColumns(['action', 'step_change'])
+                ->make(true);
+
+        }
 //        dd($applicants);
-        return view('admin.participant_list', compact('applicants'));
+        return view('admin.participant_list', $data);
+
+    }
+
+    public function dashboardData(Request $request)
+    {
+        $limit = $request->limit ?? 10;
+        $first_name = $request->first_name ?? null;
+        $currentStep = MwStep::query()->where('is_current', 1)->first()->id;
+        return $applicants = MwApplicant::where('first_name', 'like', '%' . $first_name . '%')
+            ->whereHas('address.upazilla', function ($q) use ($first_name) {
+                $q->where('name', 'like', '%' . $first_name . '%');
+            })->with('address.upazilla.district.division', 'imageVideo')
+            ->where('f_current_steps', $currentStep)
+            ->orderBy('id')
+            ->paginate($limit);
     }
 
     public function dashboard_bk(Request $request)
@@ -136,11 +208,11 @@ class AdminController extends Controller
 
     public function test()
     {
-        $division=Division::with('districts.upazilla')->get();
+        $division = Division::with('districts.upazilla')->get();
         dd($division->districts->random()->id);
-        $upazilla=Upazilla::with('district.division')->get()->random();
+        $upazilla = Upazilla::with('district.division')->get()->random();
         dd($upazilla->district->division->id);
-        $user=User::factory(1)->create();
+        $user = User::factory(1)->create();
         dd($user[0]->id);
         return Schema::getColumnListing('mw_applicants');
 //      $upazilla =  Upazilla::with('district.division')->get()->random();
@@ -156,6 +228,22 @@ class AdminController extends Controller
 //        $a=Upazilla::with(['district' =>  function($query) {
 //            $query->orderByRaw('RAND()')->take(1);}])->get();
 //        return $a;
+    }
+
+    public function test2(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = User::select('id', 'name', 'email')->get();
+            return Datatables::of($data)->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('admin.test');
     }
 
     public function logout()

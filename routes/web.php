@@ -4,8 +4,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SocialController;
 use App\Http\Controllers\UserController;
+use App\Models\MwStep;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +49,7 @@ Auth::routes();
         });
     Route::group(['middleware' => 'admin.auth'], function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+//        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 //        Route::get('/dashboard2', [AdminController::class, 'dashboard2'])->name('admin.dashboard2');
         Route::get('/logout', [AdminController::class, 'logout'])->name('admin.logout');
         Route::view('/auction', 'admin.auction')->name('auction.entry');
@@ -56,16 +60,24 @@ Route::get('admin/getData', [AdminController::class, 'getData'])->name('admin.ge
 Route::get('admin/dashboard2view', [AdminController::class, 'dashboard2view'])->name('admin.dashboard2view');
 
 Route::get('test',function (Request $request){
-    $limit = $request->limit ?? 10;
-    $user = \App\Models\User::query()->paginate($limit);
-    return view('test',compact('user'));
+    if ($request->ajax()) {
+        $data = User::select('id','name','email')->get();
+        return Datatables::of($data)->addIndexColumn()
+            ->addColumn('action', function($row){
+                $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                return $btn;
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    return view('test',compact(['data']));
 })->name('test');
 
-Route::get('test2',function(Request $request){
-    $limit = $request->limit ?? 10;
-    $user=\App\Models\User::query()->paginate($limit);
-    return view('admin.test2',compact('user'));
-})->name('test2');
+Route::get('test2',[AdminController::class,'test2'])->name('test2');
+
+Route::get('search',[AdminController::class,'dashboardData'])->name('search');
+//Route::resource('product',\App\Http\Controllers\ProductController::class);
 
 //Route::view('admin/login','admin.login')->name('admin.login');
 //Route::post('admin/login',[AdminController::class,'login'])->name('admin.auth');
