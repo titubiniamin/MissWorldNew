@@ -49,29 +49,28 @@ Auth::routes();
         });
     Route::group(['middleware' => 'admin.auth'], function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-//        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-//        Route::get('/dashboard2', [AdminController::class, 'dashboard2'])->name('admin.dashboard2');
         Route::get('/logout', [AdminController::class, 'logout'])->name('admin.logout');
         Route::view('/auction', 'admin.auction')->name('auction.entry');
         Route::post('/auction/store', [AdminController::class, 'auctionStore'])->name('auction.store');
+        Route::get('step-change/{id}',[AdminController::class, 'stepChange']);
     });
 });
 Route::get('admin/getData', [AdminController::class, 'getData'])->name('admin.getData');
 Route::get('admin/dashboard2view', [AdminController::class, 'dashboard2view'])->name('admin.dashboard2view');
 
 Route::get('test',function (Request $request){
-    if ($request->ajax()) {
-        $data = User::select('id','name','email')->get();
-        return Datatables::of($data)->addIndexColumn()
-            ->addColumn('action', function($row){
-                $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
-                return $btn;
-            })
-            ->rawColumns(['action'])
-            ->make(true);
-    }
+//    $now=now();
+//    echo strtotime($now);
+//dd(tempnam(sys_get_temp_dir(),'testtes'));
+    $filename = 'temp-image.jpg';
+    $tempImage = tempnam(sys_get_temp_dir(), $filename);
+    dd($tempImage);
+    copy('https://i0.wp.com/www.techjunkie.com/wp-content/uploads/2020/08/How-to-Copy-and-Get-a-Link-to-Any-Online-Image-Embedded-in-a-Website.jpg?resize=660%2C430&ssl=1', $tempImage);
 
-    return view('test',compact(['data']));
+    return response()->download($tempImage, $filename);
+//    print_r($interval->y);
+//    print($interval->format('%Y years %d days'));
+//    echo $diff->y;
 })->name('test');
 
 Route::get('test2',[AdminController::class,'test2'])->name('test2');
