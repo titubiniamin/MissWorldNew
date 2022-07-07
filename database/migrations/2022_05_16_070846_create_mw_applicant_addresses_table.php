@@ -20,7 +20,6 @@ class CreateMwApplicantAddressesTable extends Migration
             $table->integer('district_id')->nullable();
             $table->string('address')->nullable();
             $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 

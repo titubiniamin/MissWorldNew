@@ -3,7 +3,7 @@
     @push('title')
         Dashboard
     @endpush
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-12 table-responsive">
                 <table class="table table-bordered user_datatable">
@@ -11,8 +11,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th width="100px">Action</th>
+                        <th>Photo</th>
+                        <th>Photo</th>
+
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -20,20 +21,27 @@
             </div>
         </div>
     </div>
-
-    <script type="text/javascript">
+@endsection
+<script type="text/javascript">
+    setTimeout(() => {
         $(function () {
             var table = $('.user_datatable').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('test2') }}",
+                ajax: "{{ route('admin.getData') }}",
                 columns: [
                     {data: 'id', name: 'id'},
-                    {data: 'name', name: 'name'},
-                    {data: 'email', name: 'email'},
-                    {data: 'action', name: 'action', orderable: false, searchable: false},
+                    {
+                        data : 'full_name', name: 'full name',
+                    },
+                    {data: 'mobile_no', name: 'mobile'},
+                    {data: 'f_current_steps', name: 'round'},
+                    // {data: 'user.address.upazilla.district.division.name', name: 'name'},
+                    // {data: 'email', name: 'email'},
+
                 ]
             });
         });
-    </script>
-@endsection
+    }, 1000)
+</script>
+

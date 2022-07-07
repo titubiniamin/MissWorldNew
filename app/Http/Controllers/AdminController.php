@@ -4,12 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Admin;
 use App\Models\District;
+use App\Models\Division;
 use App\Models\MwApplicant;
+use App\Models\MwApplicantAddress;
 use App\Models\MwFingerprint;
 use App\Models\MwStep;
+use App\Models\Upazilla;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\URL;
+use Yajra\DataTables\Facades\DataTables;
 
 class AdminController extends Controller
 {
@@ -54,19 +61,116 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        $value = $request->session()->get('key');
-        if ($value) {
-            $steps = MwStep::all()->sortBy('step_num');
-            $currentStep = MwStep::query()->where('is_current', '=', 1)->first()->id;
-            $districts = District::query()->orderBy('name', 'asc')->get();
-            $mwApplicats=MwApplicant::all()->where('f_current_steps',$currentStep);
-            dd($mwApplicats);
-//            $currentStep=MwStep::query()->where('is_current','=',1)->first()//not working;
-//            $current_step = MwStep::where('is_current','=',1)->first()->id;
-            dd($currentStep);
-            return view('admin.dashboard');
-        } else return view('admin.login');
+        if ($request->ajax()) {
+            $currentStep = MwStep::where('is_current', 1)->first()->id;
+            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user')
+                ->where('f_current_steps', $currentStep)
+                ->get();
 
+            return Datatables::of($applicants)->addIndexColumn()
+                ->addIndexColumn()
+                ->addColumn('name', function ($row) {
+                    return $row->first_name . " " . $row->last_name;
+                })
+                ->addColumn('photo', function ($row) {
+                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/' . $row->imageVideo->close_up_photo) : asset('images/blank.png');
+                    return '<img src="' . $image . '" height="100" width="100">';
+                })
+                ->addColumn('video', function ($row) {
+                    if ($row->imageVideo->video) {
+                        $video = asset('storage/applicant_image/' . $row->imageVideo->video);
+                        $result = '<video src="' . $video . '" height="100" width="150" controls>
+                                <source src="' . $video . '" type="video/mp4">
+                                <source src="' . $video . '" type="video/ogg">
+                            </video> ';
+                    } else {
+                        $blank = asset('images/no-video.png');
+                        $result = '<img src="' . $blank . '" height="100" width="100">';
+                    }
+                    return $result;
+
+                })
+                ->addColumn('mobile', function ($row) {
+                    return $row->mobile_no;
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('date-of-birth', function ($row) {
+                    return $row->date_of_birth;
+                })
+                ->addColumn('age', function ($row) {
+                    return date_diff(date_create($row->date_of_birth), date_create('today'))->y;
+                })
+                ->addColumn('address', function ($row) {
+                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->division->name . ', Upazilla: ' . $row->address->upazilla->name;
+                })
+                ->addColumn('step', function ($row) {
+                    $step = MwStep::where('id', $row->f_current_steps)->get()->first();
+
+                    return $step->step_name;
+                })
+                ->addColumn('step_change', function ($row) {
+                    $steps = MwStep::all();
+                    $options = "";
+                    foreach ($steps as $step) {
+                        if ($step->id >= $row->f_current_steps && $step->id < ($row->f_current_steps + 2)) {
+                            $options .= '<option value="' . $step->id . '"' . ($step->id == $row->f_current_steps ? "selected" : "") . ' >' . $step->step_name . '</option>';
+                        }
+                    }
+                    return
+                        '<select id="step" class="form-control" onchange="getSteps()">
+                        <option disabled selected>Change/Jump Next Round</option>
+                        ' . $options . '</select>';
+
+
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->rawColumns(['action', 'step_change', 'photo', 'video'])
+                ->make(true);
+        }
+        return view('admin.participant_list');
+
+    }
+
+    public function stepChange($stepId)
+    {
+        return $stepId;
+    }
+
+
+//    public function test()
+//    {
+//        $division = Division::with('districts.upazilla')->get();
+//        dd($division->districts->random()->id);
+//        $upazilla = Upazilla::with('district.division')->get()->random();
+//        dd($upazilla->district->division->id);
+//        $user = User::factory(1)->create();
+//        dd($user[0]->id);
+//        return Schema::getColumnListing('mw_applicants');
+////      $upazilla =  Upazilla::with('district.division')->get()->random();
+//        $division = Division::with('districts.upazilla')->get()->random();
+//        dd($division->districts->random()->upazilla->random());
+//
+//    }
+
+    public function test2(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = User::select('id', 'name', 'email')->get();
+            return Datatables::of($data)->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('admin.test');
     }
 
     public function logout()

@@ -24,7 +24,7 @@ class User extends Authenticatable
         'fb_id',
 
     ];
-public $timestamps=true;
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -35,12 +35,17 @@ public $timestamps=true;
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+
+    public function address()
+    {
+        return $this->hasOne(MwApplicantAddress::class);
+    }
+
+    public function image_video()
+    {
+        return $this->hasOne(MwApplicantImageVideo::class);
+    }
+
+
+
 }
