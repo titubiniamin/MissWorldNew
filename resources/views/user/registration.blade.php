@@ -686,7 +686,7 @@
                         type: 'GET',
                         dataType: 'JSON',
                         success: function (data) {
-                            // console.log(data);
+                            console.log(data);
                             let selectOption = [];
                             data.forEach(function (district) {
                                 // console.log(district);

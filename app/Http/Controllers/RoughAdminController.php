@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+//use App\Exports\UserExport;
 use App\Models\Admin;
 use App\Models\District;
 use App\Models\Division;
@@ -9,6 +10,7 @@ use App\Models\MwApplicant;
 use App\Models\MwApplicantAddress;
 use App\Models\MwFingerprint;
 use App\Models\MwStep;
+use App\Models\Test;
 use App\Models\Upazilla;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -16,10 +18,171 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
-use Yajra\DataTables\Facades\DataTables;
 
-class AdminController extends Controller
+//use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel;
+use Yajra\DataTables\Facades\DataTables;
+use App\Exports\UserExport;
+use App\Exports\UserExport2;
+
+class RoughAdminController extends Controller
 {
+    public function index(Request $request)
+    {
+
+//        $currentStep = MwStep::where('is_current', 1)->first()->id;
+//        $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user');
+//        $applicants=$applicants->where('mail_status',1) ;
+//        dd($applicants->get());
+//        $applicants = $applicants->whereHas('imageVideo',function ($query) use ($request){
+//            $query->where('close_up_photo')
+//                ->orWhere('mid_shot_photo')
+//                ->orWhere('full_length_photo');
+//        })->get();
+//        dd($applicants);
+
+//        $applicants = MwApplicant::query();
+//        $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user');
+////        $applicants=MwApplicant::all();
+//        $applicants = $applicants->whereHas('imageVideo',function ($query) {
+//            $query->whereNotNull('close_up_photo');
+//        })->get();
+//        dd($applicants);
+
+        $rounds = MwStep::query()->orderBy('step_num')->get();
+        $districts = District::query()->orderBy('name')->get();
+        if (request()->ajax()) {
+            $currentStep = MwStep::where('is_current', 1)->first()->id;
+            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user');
+
+            if (!empty($request->round)) {
+                $applicants = $applicants->where('f_current_steps', $request->round);
+            }
+            if (!empty($request->height)) {
+                $applicants = $applicants->where('height', $request->height);
+            }
+
+            if (!empty($request->district)) {
+                $applicants = $applicants->whereHas('address', function ($query) use ($request) {
+                    $query->where('district_id', '=', $request->district);
+                });
+            }
+            if (!empty($request->startDate) && !empty($request->endDate)) {
+                $applicants = $applicants->whereBetween('created_at', [$request->startDate, $request->endDate]);
+//                $applicants = $applicants->where('id', '=',1);
+            }
+            if (!empty($request->photoStatus)) {
+                if ($request->photoStatus == 1) {
+                    $applicants = $applicants->whereHas('imageVideo', function ($query) {
+                        $query->whereNotNull('close_up_photo');
+                    });
+                }
+            }
+
+//            if (!empty($request->applicationStatus)) {
+//
+//                    if($request->applicationStatus == 1)
+//                    {
+//                        $applicants=$applicants->where('mail_status',1) ;
+//                    }else if($request->applicationStatus == 0){
+//                        $applicants=$applicants->where('mail_status', 0) ;
+//                    }else{
+//                        $applicants=$applicants->where('id',1);
+//                    }
+//            }
+
+            return datatables()->of($applicants)
+                ->addIndexColumn()
+                ->setRowClass(function ($row) {
+                    if ($row->mail_status == 0 && $row->is_view == 0) {
+                        $class = "table-danger";
+                    } else if ($row->mail_status == 0 && $row->is_view == 1) {
+                        $class = "table-warning";
+                    } else if ($row->mail_status == 1 && $row->is_view == 0) {
+                        $class = "table-success";
+                    } else {
+                        $class = "table-default";
+                    }
+                    return $class;
+                })
+                ->addIndexColumn()
+                ->addColumn('name', function ($row) {
+                    return $row->first_name . " " . $row->last_name;
+                })
+                ->addColumn('photo', function ($row) {
+                    if ($row->imageVideo && $row->imageVideo->close_up_photo) {
+                        $image = asset('storage/applicant_image/' . $row->imageVideo->close_up_photo);
+                    } else {
+                        $image = asset('images/blank.png');
+                    }
+//                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/' . $row->imageVideo->close_up_photo) : asset('images/blank.png');
+                    return '<img src="' . $image . '" height="100" width="100">';
+                })
+                ->addColumn('video', function ($row) {
+                    if ($row->imageVideo && $row->imageVideo->video) {
+                        $video = asset('storage/applicant_image/' . $row->imageVideo->video);
+                        $result = '<video src="' . $video . '" height="100" width="150" controls>
+                                <source src="' . $video . '" type="video/mp4">
+                                <source src="' . $video . '" type="video/ogg">
+                            </video> ';
+                    } else {
+                        $blank = asset('images/no-video.png');
+                        $result = '<img src="' . $blank . '" height="50" width="50">';
+                    }
+                    return $result;
+
+                })
+                ->addColumn('height', function ($row) {
+                    return $row->height;
+                })
+                ->addColumn('mobile', function ($row) {
+                    return $row->mobile_no;
+                })
+                ->addColumn('email', function ($row) {
+                    return $row->user->email;
+                })
+                ->addColumn('date-of-birth', function ($row) {
+                    return $row->date_of_birth;
+                })
+                ->addColumn('age', function ($row) {
+                    return date_diff(date_create($row->date_of_birth), date_create('today'))->y;
+                })
+                ->addColumn('address', function ($row) {
+                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->district->name . ', Upazilla: ' . $row->address->upazilla->name;
+                })
+                ->addColumn('step', function ($row) {
+                    $step = MwStep::where('id', $row->f_current_steps)->get()->first();
+
+                    return '<span id="step-' . $row->id . '">' . $step->step_name . ' </span>';
+                })
+                ->addColumn('step_change', function ($row) {
+                    $steps = MwStep::all();
+                    $options = "";
+                    foreach ($steps as $step) {
+                        if ($step->id >= $row->f_current_steps && $step->id < ($row->f_current_steps + 2)) {
+                            $options .= '<option value="' . $step->id . '"' . ($step->id == $row->f_current_steps ? "selected" : "") . ' >' . $step->step_name . '</option>';
+                        }
+                    }
+                    $id = $row->id;
+                    return '<select id="step" class="form-control" onchange="getSteps(event,' . $id . ')">
+                        <option disabled selected>Change/Jump Next Round</option>
+                        ' . $options . '</select>';
+
+
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
+                    return $btn;
+                })
+                ->rawColumns(['action', 'step_change', 'photo', 'video', 'step'])
+                ->make(true);
+
+        }
+        $customer_name = MwApplicant::all();
+        return view('custom-search', compact('customer_name', 'rounds', 'districts'));
+
+    }
+
     public function viewAdminLogin(Request $request)
     {
         $value = $request->session()->get('key');
@@ -59,82 +222,42 @@ class AdminController extends Controller
         }
     }
 
+    public function export()
+    {
+        dd(1);
+        return Excel::download(new UserExport, 'users.xlsx');
+    }
+
     public function dashboard(Request $request)
     {
-//        if ($request->ajax()) {
-//            $data = User::select('id','name','email')->get();
-//            return Datatables::of($data)->addIndexColumn()
-//                ->addColumn('action', function($row){
-//                    $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
-//                    return $btn;
-//                })
-//                ->rawColumns(['action'])
-//                ->make(true);
-//        }
-//        $step=MwStep::where('id',1)->get()->first();
-//        return $step->step_name;
-//
-//        return view('admin.participant_list');
-//        $steps = MwStep::all();
-//        $currentStep = $steps->where('is_current', 1)->first()->id;
-//        $applicants = MwApplicant::with(['user', function($query) use ($currentStep){
-//            $query->with('address.upazilla,district.division','imageVideo')
-//                ->where('f_current_step',$currentStep);
-//        }]) ->get();
-//
-//            dd($applicants);
-//        $steps = MwStep::all();
-//        $currentStep = $steps->where('is_current', 1)->first()->id;
-//        $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo')
-//            ->where('f_current_steps', 1)
-//            ->get();
-//            dd($applicants[0]->imageVideo->close_up_photo);
-//        $data = ['test' => 'test'];
-//        $steps = MwStep::all();
-//        $currentStep = $steps->where('is_current', 1)->first()->id;
-////        dd($currentStep);
-//        $applicants = MwApplicant::with(['user'=> function($query) use ($currentStep){
-//            $query->with('address.upazilla,district.division','imageVideo')
-//                ->where('f_current_step',$currentStep);
-//
-//            }]) ->get();
 
 
-//            dd($applicants);
         if ($request->ajax()) {
-//            $data = MwApplicant::query()->with(['user' => function ($query) {
-//                $query->with(['address.upazilla.district.division']);
-//            }])->get();
-//            $steps = MwStep::all();
+
             $currentStep = MwStep::where('is_current', 1)->first()->id;
-            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo','user')
+            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user')
                 ->where('f_current_steps', $currentStep)
                 ->get();
-//            $applicants = MwApplicant::with(['user', function($query) use ($currentStep){
-//                $query->with('address.upazilla,district.division','imageVideo')
-//                    ->where('f_current_step',$currentStep);
-//            }]) ->get();
 
-//            dd($applicants);
             return Datatables::of($applicants)->addIndexColumn()
                 ->addIndexColumn()
                 ->addColumn('name', function ($row) {
                     return $row->first_name . " " . $row->last_name;
                 })
                 ->addColumn('photo', function ($row) {
-                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/'.$row->imageVideo->close_up_photo) : asset('images/blank.png') ;
+                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/' . $row->imageVideo->close_up_photo) : asset('images/blank.png');
                     return '<img src="' . $image . '" height="100" width="100">';
                 })
                 ->addColumn('video', function ($row) {
-                    if($row->imageVideo->video){
-                        $video= asset('storage/applicant_image/'.$row->imageVideo->video);
-                        $result='<video src="' . $video . '" height="100" width="150" controls>
-                                <source src="'.$video.'" type="video/mp4">
-                                <source src="'.$video.'" type="video/ogg">
+                    if ($row->imageVideo->video) {
+                        $video = asset('storage/applicant_image/' . $row->imageVideo->video);
+                        $result = '<video src="' . $video . '" height="100" width="150" controls>
+                                <source src="' . $video . '" type="video/mp4">
+                                <source src="' . $video . '" type="video/ogg">
                             </video> ';
-                    } else{
-                        $blank=asset('images/no-video.png');
-                        $result='<img src="' . $blank . '" height="100" width="100">';
+                    } else {
+                        $blank = asset('images/no-video.png');
+                        $result = '<img src="' . $blank . '" height="100" width="100">';
                     }
                     return $result;
 
@@ -154,7 +277,7 @@ class AdminController extends Controller
 //                    return $age;
                 })
                 ->addColumn('address', function ($row) {
-                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->division->name. ', Upazilla: ' . $row->address->upazilla->name;
+                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->division->name . ', Upazilla: ' . $row->address->upazilla->name;
                 })
                 ->addColumn('step', function ($row) {
                     $step = MwStep::where('id', $row->f_current_steps)->get()->first();
@@ -182,7 +305,7 @@ class AdminController extends Controller
                     $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
                     return $btn;
                 })
-                ->rawColumns(['action', 'step_change', 'photo','video'])
+                ->rawColumns(['action', 'step_change', 'photo', 'video'])
                 ->make(true);
 
         }
@@ -205,14 +328,14 @@ class AdminController extends Controller
             ->paginate($limit);
     }
 
+    public function exports()
+    {
+        return Excel::download(new UserExport, 'uses.xlsx');
+    }
+
     public function dashboard_bk(Request $request)
     {
-//        $data = MwApplicant::query()->with(['user' => function ($query) {
-//            $query->with(['address.upazilla.district.division','imageVideo']);
-//        }])->get();
-//        return $data;
-        //////////////////////////
-        ///
+
         $search = $request->search['value'] ?? null;
         $steps = MwStep::all();
         $districts = District::all();
@@ -236,12 +359,6 @@ class AdminController extends Controller
 
 //        return view('users');
         return view('admin.dashboard', ['steps' => $steps, 'districts' => $districts]);
-        /// //////////////////////////
-        ///
-//        $data2=MwApplicant::query()->select('*')
-//            ->leftJoin('mw_applicant_addresses','mw_applicant_addresses.user_id','=','mw_applicants.id')
-//            ->leftJoin('districts','districts.id','=','mw_applicant_addresses.district_id')->get();
-//        dd($data2);
         $data = MwApplicant::query()->with(['user' => function ($query) {
             $query->with(['address.upazilla.district.division', 'imageVideo']);
         }])->get()->toArray();
@@ -255,10 +372,7 @@ class AdminController extends Controller
             $currentStep = MwStep::query()->where('is_current', '=', 1)->first()->id;
             $districts = District::query()->orderBy('name', 'asc')->get();
             $mwApplicats = MwApplicant::all()->where('f_current_steps', $currentStep);
-//            dd($mwApplicats);
-//            $currentStep=MwStep::query()->where('is_current','=',1)->first()//not working;
-//            $current_step = MwStep::where('is_current','=',1)->first()->id;
-//            dd($currentStep);
+
             return view('admin.dashboard');
         } else return view('admin.login');
 
@@ -266,6 +380,7 @@ class AdminController extends Controller
 
     public function test()
     {
+        return view('test');
         $division = Division::with('districts.upazilla')->get();
         dd($division->districts->random()->id);
         $upazilla = Upazilla::with('district.division')->get()->random();
@@ -276,16 +391,7 @@ class AdminController extends Controller
 //      $upazilla =  Upazilla::with('district.division')->get()->random();
         $division = Division::with('districts.upazilla')->get()->random();
         dd($division->districts->random()->upazilla->random());
-//        $division=Division::all();
-//        $data = Upazilla::with('district')->get();
-//        print_r($data);
-//        $district=District::with(['division'=>function($query) use ($division){
-//            dd($division);
-//        }]);
-//        dd($district);
-//        $a=Upazilla::with(['district' =>  function($query) {
-//            $query->orderByRaw('RAND()')->take(1);}])->get();
-//        return $a;
+
     }
 
     public function test2(Request $request)
@@ -347,6 +453,43 @@ class AdminController extends Controller
         $update->save();
         session()->flash('success', 'Contact Authorized person to accept your request');
         return view('admin.auth_request');
+    }
+// private $excel;
+//    public function __construct(Excel $excel){
+////        $this->excel=$excel;
+//}
+    public function exports2(Excel $excel)
+    {
+//        $export
+
+        return $excel->download(new UserExport2, 'user.xls');
+
+//        return new UserExport2;
+//        return Exc el::download(new UserExport2,'users2.xlsx');
+//        return (new UserExport2())->download('users2.xlsx');
+//        return $excel2;
+//        return $excel->download(new UserExport2,'use.xlsx');
+    }
+
+    public function test3()
+    {
+        return view('test')->with('message', 'Data added Successfully');
+
+
+    }
+
+    public function aa()
+    {
+        return view('aa');
+
+
+    }
+
+    public function aaStore(Request $request)
+    {
+//        dd('sdfsdf');
+        return back()->with('message', 'Data added Successfully');
+
     }
 
 }

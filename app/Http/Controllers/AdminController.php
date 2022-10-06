@@ -11,12 +11,16 @@ use App\Models\MwFingerprint;
 use App\Models\MwStep;
 use App\Models\Upazilla;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\URL;
 use Yajra\DataTables\Facades\DataTables;
+use Maatwebsite\Excel\ExcelServiceProvider;
+use App\Exports\UserExport;
+use function MongoDB\BSON\toJSON;
 
 class AdminController extends Controller
 {
@@ -61,23 +65,83 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-        if ($request->ajax()) {
-            $currentStep = MwStep::where('is_current', 1)->first()->id;
-            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user')
-                ->where('f_current_steps', $currentStep)
-                ->get();
 
-            return Datatables::of($applicants)->addIndexColumn()
+        $rounds = MwStep::query()->orderBy('step_num')->get();
+        $districts = District::query()->orderBy('name')->get();
+        if (request()->ajax()) {
+            $currentStep = MwStep::where('is_current', 1)->first()->id;
+            $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user');
+
+            if (!empty($request->round)) {
+                $applicants = $applicants->where('f_current_steps', $request->round);
+            }
+            if (!empty($request->height)) {
+                $applicants = $applicants->where('height', $request->height);
+            }
+
+            if (!empty($request->district)) {
+                $applicants = $applicants->whereHas('address', function ($query) use ($request) {
+                    $query->where('district_id', '=', $request->district);
+                });
+            }
+            if (!empty($request->startDate) && !empty($request->endDate)) {
+                $applicants = $applicants->whereBetween('created_at', [$request->startDate, $request->endDate]);
+//                $applicants = $applicants->where('id', '=',1);
+            }
+            if (!empty($request->photoStatus)) {
+                if ($request->photoStatus == 1) {
+                    $applicants = $applicants->whereHas('imageVideo', function ($query) {
+                        $query->whereNotNull('close_up_photo');
+                    });
+                }
+                if($request->photoStatus == 0){
+                    $applicants=$applicants->whereHas('imageVideo', function ($query) {
+                        $query->whereNotNull('close_up_photo');
+                    });
+                }
+            }
+
+//            if (!empty($request->applicationStatus)) {
+//
+//                    if($request->applicationStatus == 1)
+//                    {
+//                        $applicants=$applicants->where('mail_status',1) ;
+//                    }else if($request->applicationStatus == 0){
+//                        $applicants=$applicants->where('mail_status', 0) ;
+//                    }else{
+//                        $applicants=$applicants->where('id',1);
+//                    }
+//            }
+
+            return datatables()->of($applicants)
+                ->addIndexColumn()
+                ->setRowClass(function ($row) {
+                    if ($row->mail_status == 0 && $row->is_view == 0) {
+                        $class = "table-danger";
+                    } else if ($row->mail_status == 0 && $row->is_view == 1) {
+                        $class = "table-warning";
+                    } else if ($row->mail_status == 1 && $row->is_view == 0) {
+                        $class = "table-success";
+                    } else {
+                        $class = "table-default";
+                    }
+                    return $class;
+                })
                 ->addIndexColumn()
                 ->addColumn('name', function ($row) {
                     return $row->first_name . " " . $row->last_name;
                 })
                 ->addColumn('photo', function ($row) {
-                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/' . $row->imageVideo->close_up_photo) : asset('images/blank.png');
+                    if ($row->imageVideo && $row->imageVideo->close_up_photo) {
+                        $image = asset('storage/applicant_image/' . $row->imageVideo->close_up_photo);
+                    } else {
+                        $image = asset('images/blank.png');
+                    }
+//                    $image = $row->imageVideo->close_up_photo ? asset('storage/applicant_image/' . $row->imageVideo->close_up_photo) : asset('images/blank.png');
                     return '<img src="' . $image . '" height="100" width="100">';
                 })
                 ->addColumn('video', function ($row) {
-                    if ($row->imageVideo->video) {
+                    if ($row->imageVideo && $row->imageVideo->video) {
                         $video = asset('storage/applicant_image/' . $row->imageVideo->video);
                         $result = '<video src="' . $video . '" height="100" width="150" controls>
                                 <source src="' . $video . '" type="video/mp4">
@@ -85,10 +149,13 @@ class AdminController extends Controller
                             </video> ';
                     } else {
                         $blank = asset('images/no-video.png');
-                        $result = '<img src="' . $blank . '" height="100" width="100">';
+                        $result = '<img src="' . $blank . '" height="50" width="50">';
                     }
                     return $result;
 
+                })
+                ->addColumn('height', function ($row) {
+                    return $row->height;
                 })
                 ->addColumn('mobile', function ($row) {
                     return $row->mobile_no;
@@ -103,12 +170,12 @@ class AdminController extends Controller
                     return date_diff(date_create($row->date_of_birth), date_create('today'))->y;
                 })
                 ->addColumn('address', function ($row) {
-                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->division->name . ', Upazilla: ' . $row->address->upazilla->name;
+                    return $row->address->address . ', Division: ' . $row->address->division->name . ', District: ' . $row->address->district->name . ', Upazilla: ' . $row->address->upazilla->name;
                 })
                 ->addColumn('step', function ($row) {
                     $step = MwStep::where('id', $row->f_current_steps)->get()->first();
 
-                    return $step->step_name;
+                    return '<span id="step-' . $row->id . '">' . $step->step_name . ' </span>';
                 })
                 ->addColumn('step_change', function ($row) {
                     $steps = MwStep::all();
@@ -118,8 +185,8 @@ class AdminController extends Controller
                             $options .= '<option value="' . $step->id . '"' . ($step->id == $row->f_current_steps ? "selected" : "") . ' >' . $step->step_name . '</option>';
                         }
                     }
-                    return
-                        '<select id="step" class="form-control" onchange="getSteps()">
+                    $id = $row->id;
+                    return '<select id="step" class="form-control" onchange="getSteps(event,' . $id . ')">
                         <option disabled selected>Change/Jump Next Round</option>
                         ' . $options . '</select>';
 
@@ -129,16 +196,19 @@ class AdminController extends Controller
                     $btn = '<a href="javascript:void(0)" class="btn btn-primary btn-sm">View</a>';
                     return $btn;
                 })
-                ->rawColumns(['action', 'step_change', 'photo', 'video'])
+                ->rawColumns(['action', 'step_change', 'photo', 'video', 'step'])
                 ->make(true);
+
         }
-        return view('admin.participant_list');
+        $customer_name = MwApplicant::all();
+        return view('custom-search', compact('customer_name', 'rounds', 'districts'));
 
     }
 
-    public function stepChange($stepId)
+    public function stepChange($stepId, $id)
     {
-        return $stepId;
+        MwApplicant::find($id)->update(['f_current_steps' => $stepId]);
+        return response()->json(['message' => 'Step Updated Successfully.']);
     }
 
 
@@ -216,6 +286,11 @@ class AdminController extends Controller
         $update->save();
         session()->flash('success', 'Contact Authorized person to accept your request');
         return view('admin.auth_request');
+    }
+
+    public function export()
+    {
+        dd(1);
     }
 
 }

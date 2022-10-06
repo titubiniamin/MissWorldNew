@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UpazillaSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(AdminSeeder::class);
+        $this->call(TestSeeder::class);
 
 
 //         User::factory(10)->create();
