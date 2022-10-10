@@ -65,7 +65,6 @@ class AdminController extends Controller
 
     public function dashboard(Request $request)
     {
-
         $rounds = MwStep::query()->orderBy('step_num')->get();
         $districts = District::query()->orderBy('name')->get();
         if (request()->ajax()) {
@@ -73,7 +72,11 @@ class AdminController extends Controller
             $applicants = MwApplicant::with('address.upazilla.district.division', 'imageVideo', 'user');
 
             if (!empty($request->round)) {
+
+
                 $applicants = $applicants->where('f_current_steps', $request->round);
+
+
             }
             if (!empty($request->height)) {
                 $applicants = $applicants->where('height', $request->height);
@@ -85,19 +88,22 @@ class AdminController extends Controller
                 });
             }
             if (!empty($request->startDate) && !empty($request->endDate)) {
-                $applicants = $applicants->whereBetween('created_at', [$request->startDate, $request->endDate]);
+                $applicants = $applicants->whereBetween('created_at', [$request->startDate." 00:00:00", $request->endDate." 23:59:59"]);
 //                $applicants = $applicants->where('id', '=',1);
             }
-            if (!empty($request->photoStatus)) {
+            if ($request->filled('photoStatus')) {
                 if ($request->photoStatus == 1) {
-                    $applicants = $applicants->whereHas('imageVideo', function ($query) {
-                        $query->whereNotNull('close_up_photo');
-                    });
+                    $applicants = $applicants->whereHas('imageVideo');
                 }
-                if($request->photoStatus == 0){
-                    $applicants=$applicants->whereHas('imageVideo', function ($query) {
-                        $query->whereNotNull('close_up_photo');
-                    });
+                else if ($request->photoStatus == 0) $applicants = $applicants->doesntHave('imageVideo');
+            }
+
+
+
+            if (!empty($request->applicationStatus)) {
+
+                if ($request->applicationStatus == 1) {
+                    $applicants = $applicants->where('mail_status', 1);
                 }
             }
 

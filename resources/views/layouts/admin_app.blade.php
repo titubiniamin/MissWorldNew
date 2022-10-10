@@ -118,6 +118,6 @@
 <script src="{{asset('admin_assets/plugins/chartist-plugin-tooltips/js/chartist-plugin-tooltip.min.js')}}"></script>
 <script src="{{asset('admin_assets/js/dashboard/dashboard-1.js')}}"></script>
 
-
+@stack('scripts')
 </body>
 </html>
