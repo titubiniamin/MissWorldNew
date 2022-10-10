@@ -37,6 +37,9 @@
             </div>
         </div>
     </div>
+        <script>
+            console.log('hello');
+        </script>
 
     <script type="text/javascript">
         const Toast = Swal.mixin({
@@ -81,24 +84,28 @@
                 });
             }
 
-            $('#search').click(function(){
-                console.log('search clicked')
-                //startDate:startDate,endDate:endDate,height:height,district:district,round:round
-                var startDate=$('#startDate').val()
-                let endDate=$('#endDate').val()
-                let height=$('#height').val()
-                let district=$('#district').val()
-                let round=$('#round').val()
-                if(round != ''){
-                    console.log('not null district')
-                    $('#user_datatable').DataTable().destroy();
-                    // $('#txtstartdate').val("GeeksForGeeks");
-                    fillDatatable(round)
-                }else {
-                    alert('fill round')
-                }
+          $('#search-applicant').click(function () {
+              console.log('aaaaaaaaaaaaaaaaaaaaa')
+          })
 
-            })
+            // $('#search-applicant').click(function(){
+            //     console.log('search clicked')
+            //     //startDate:startDate,endDate:endDate,height:height,district:district,round:round
+            //     var startDate=$('#startDate').val()
+            //     let endDate=$('#endDate').val()
+            //     let height=$('#height').val()
+            //     let district=$('#district').val()
+            //     let round=$('#round').val()
+            //     if(round != ''){
+            //         console.log('not null district')
+            //         $('#user_datatable').DataTable().destroy();
+            //         // $('#txtstartdate').val("GeeksForGeeks");
+            //         fillDatatable(round)
+            //     }else {
+            //         alert('fill round')
+            //     }
+            //
+            // })
 
         });
 
@@ -164,4 +171,6 @@
 
         }
     </script>
+
+
 @endsection
