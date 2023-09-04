@@ -35,7 +35,6 @@ class DatabaseSeeder extends Seeder
         $this->call(DistrictSeeder::class);
         $this->call(UpazillaSeeder::class);
         $this->call(UserSeeder::class);
-        $this->call(AdminSeeder::class);
         $this->call(TestSeeder::class);
 
 
